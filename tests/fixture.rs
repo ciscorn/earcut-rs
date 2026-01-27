@@ -292,3 +292,8 @@ fn fixture_issue149() {
 fn fixture_issue142() {
     test_fixture("issue142", 4, 0.13);
 }
+
+#[test]
+fn fixture_issue186() {
+    test_fixture("issue186", 41, 0.0);
+}
