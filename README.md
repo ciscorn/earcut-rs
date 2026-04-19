@@ -7,8 +7,8 @@
 A Rust port of the [mapbox/earcut](https://github.com/mapbox/earcut) polygon triangulation library.
 
 - Based on the latest earcut 3.0.2 release.
-- Designed to avoid unnecessary memory allocations. The internal buffers and output index buffer can be reused across multiple triangulations.
-- (Experimental) An additional module, `utils3d`, can rotate 3D coplanar polygons into the 2D plane before triangulation.
+- Designed to avoid unnecessary memory allocations. Internal buffers and the output index vector can be reused across multiple triangulations.
+- An additional module, `utils3d`, can project 3D coplanar polygons onto a 2D plane before triangulation.
 - License: ISC
 
 <p align="center">
@@ -18,7 +18,7 @@ A Rust port of the [mapbox/earcut](https://github.com/mapbox/earcut) polygon tri
 
 ## Benchmarks
 
-on Macbook Pro (M1 Pro)
+Measured on a MacBook Pro (M1 Pro).
 
 | Polygon      | earcut.hpp  | earcut-rs (0.4.6) | earcutr (0.4.3) |
 |--------------|------------:|------------------:|----------------:|
@@ -35,4 +35,4 @@ on Macbook Pro (M1 Pro)
 | water_huge   |  7.240 ms/i |        7.459 ms/i |      10.90 ms/i |
 | water_huge2  |  15.86 ms/i |        16.57 ms/i |      22.35 ms/i |
 
-Note: Earcutr 0.4.3 is not besed on the latest earcut.
+Note: earcutr 0.4.3 is not based on the latest mapbox/earcut release.
