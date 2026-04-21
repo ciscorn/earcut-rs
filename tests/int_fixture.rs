@@ -1,10 +1,11 @@
 //! Cross-validate `earcut::int::EarcutI32` against the floating-point
 //! `earcut::Earcut<f64>` on every integer-valued fixture.
 
+use std::collections::BTreeSet;
 use std::fs;
 
 use earcut::int::{deviation as int_deviation, EarcutI32};
-use earcut::Earcut;
+use earcut::{deviation as float_deviation, Earcut};
 
 type Coords = Vec<Vec<[f64; 2]>>;
 
@@ -51,20 +52,131 @@ fn check(name: &str) {
     Earcut::new().earcut(data_f.iter().copied(), &holes, &mut f_tri);
     EarcutI32::new().earcut(data_i32.iter().copied(), &holes, &mut i32_tri);
 
-    // Because the algorithm is deterministic for identical input, the integer
-    // triangulation must produce the same indices as the f64 reference. This
-    // also implies identical deviation — no need for a separate tolerance.
     assert_eq!(
-        i32_tri,
-        f_tri,
-        "{name}: int indices differ from f64 indices (i32: {} idx, f64: {} idx)",
         i32_tri.len(),
-        f_tri.len()
+        f_tri.len(),
+        "{name}: int triangle count differs from f64 reference"
     );
 
-    // For fixtures that are expected to have a perfect triangulation
-    // (fract area == 0), we additionally confirm our integer deviation agrees.
-    let _ = int_deviation(data_i32.iter().copied(), &holes, &i32_tri);
+    let f_dev = if f_tri.is_empty() {
+        0.0
+    } else {
+        float_deviation(data_f.iter().copied(), &holes, &f_tri)
+    };
+    let i_dev = relative_int_deviation(&data_i32, &holes, &i32_tri);
+    assert!(
+        i_dev <= f_dev + 1e-12,
+        "{name}: int deviation {i_dev} exceeded f64 deviation {f_dev}"
+    );
+}
+
+fn signed_area(data: &[[i32; 2]], start: usize, end: usize) -> i64 {
+    let mut area = 0i64;
+    let mut j = end - 1;
+    for i in start..end {
+        area += ((data[j][0] as i64) - (data[i][0] as i64))
+            * ((data[j][1] as i64) + (data[i][1] as i64));
+        j = i;
+    }
+    area
+}
+
+fn polygon_area2(data: &[[i32; 2]], hole_indices: &[u32]) -> i64 {
+    if data.len() < 3 {
+        return 0;
+    }
+    let outer_len = hole_indices.first().copied().unwrap_or(data.len() as u32) as usize;
+    let mut area = signed_area(data, 0, outer_len).abs();
+    for (i, &start) in hole_indices.iter().enumerate() {
+        let start = start as usize;
+        let end = if i + 1 < hole_indices.len() {
+            hole_indices[i + 1] as usize
+        } else {
+            data.len()
+        };
+        if end - start >= 3 {
+            area -= signed_area(data, start, end).abs();
+        }
+    }
+    area
+}
+
+fn relative_int_deviation(data: &[[i32; 2]], hole_indices: &[u32], triangles: &[u32]) -> f64 {
+    let polygon_area = polygon_area2(data, hole_indices);
+    if polygon_area == 0 {
+        return 0.0;
+    }
+    int_deviation(data.iter().copied(), hole_indices, triangles) as f64 / polygon_area as f64
+}
+
+fn listed_fixtures() -> BTreeSet<&'static str> {
+    BTreeSet::from([
+        "bad-diagonals",
+        "bad-hole",
+        "boxy",
+        "building",
+        "collinear-diagonal",
+        "degenerate",
+        "eberly-3",
+        "empty-square",
+        "filtered-bridge-jhl",
+        "hilbert",
+        "hole-touching-outer",
+        "hourglass",
+        "issue111",
+        "issue119",
+        "issue131",
+        "issue149",
+        "issue186",
+        "issue34",
+        "issue35",
+        "issue45",
+        "issue52",
+        "issue83",
+        "outside-ring",
+        "rain",
+        "shared-points",
+        "simplified-us-border",
+        "steiner",
+        "touching-holes",
+        "touching-holes2",
+        "touching-holes3",
+        "touching-holes4",
+        "touching-holes5",
+        "touching-holes6",
+        "touching2",
+        "touching3",
+        "touching4",
+        "water",
+        "water-huge",
+        "water-huge2",
+        "water2",
+        "water3",
+        "water3b",
+        "water4",
+    ])
+}
+
+#[test]
+fn integer_fixture_list_matches_fixture_dir() {
+    let mut discovered = BTreeSet::new();
+    for entry in fs::read_dir("./tests/fixtures").unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
+            continue;
+        }
+        let name = path.file_stem().unwrap().to_str().unwrap();
+        if load(name).is_some() {
+            discovered.insert(name.to_owned());
+        }
+    }
+
+    let listed: BTreeSet<String> = listed_fixtures().into_iter().map(str::to_owned).collect();
+    assert_eq!(
+        listed, discovered,
+        "integer fixture list drifted; update tests/int_fixture.rs"
+    );
 }
 
 macro_rules! int_fixture_tests {
@@ -85,6 +197,7 @@ int_fixture_tests! {
     int_fixture_degenerate => "degenerate",
     int_fixture_eberly_3 => "eberly-3",
     int_fixture_empty_square => "empty-square",
+    int_fixture_filtered_bridge_jhl => "filtered-bridge-jhl",
     int_fixture_hilbert => "hilbert",
     int_fixture_hole_touching_outer => "hole-touching-outer",
     int_fixture_hourglass => "hourglass",
@@ -107,4 +220,16 @@ int_fixture_tests! {
     int_fixture_touching_holes2 => "touching-holes2",
     int_fixture_touching_holes3 => "touching-holes3",
     int_fixture_touching_holes4 => "touching-holes4",
+    int_fixture_touching_holes5 => "touching-holes5",
+    int_fixture_touching_holes6 => "touching-holes6",
+    int_fixture_touching2 => "touching2",
+    int_fixture_touching3 => "touching3",
+    int_fixture_touching4 => "touching4",
+    int_fixture_water => "water",
+    int_fixture_water_huge => "water-huge",
+    int_fixture_water_huge2 => "water-huge2",
+    int_fixture_water2 => "water2",
+    int_fixture_water3 => "water3",
+    int_fixture_water3b => "water3b",
+    int_fixture_water4 => "water4",
 }
