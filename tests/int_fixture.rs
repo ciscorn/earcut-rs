@@ -55,7 +55,7 @@ fn check(name: &str) {
     assert_eq!(
         i32_tri.len(),
         f_tri.len(),
-        "{name}: int triangle count differs from f64 reference"
+        "{name}: int index count differs from f64 reference"
     );
 
     let f_dev = if f_tri.is_empty() {
@@ -109,54 +109,6 @@ fn relative_int_deviation(data: &[[i32; 2]], hole_indices: &[u32], triangles: &[
     int_deviation(data.iter().copied(), hole_indices, triangles) as f64 / polygon_area as f64
 }
 
-fn listed_fixtures() -> BTreeSet<&'static str> {
-    BTreeSet::from([
-        "bad-diagonals",
-        "bad-hole",
-        "boxy",
-        "building",
-        "collinear-diagonal",
-        "degenerate",
-        "eberly-3",
-        "empty-square",
-        "filtered-bridge-jhl",
-        "hilbert",
-        "hole-touching-outer",
-        "hourglass",
-        "issue111",
-        "issue119",
-        "issue131",
-        "issue149",
-        "issue186",
-        "issue34",
-        "issue35",
-        "issue45",
-        "issue52",
-        "issue83",
-        "outside-ring",
-        "rain",
-        "shared-points",
-        "simplified-us-border",
-        "steiner",
-        "touching-holes",
-        "touching-holes2",
-        "touching-holes3",
-        "touching-holes4",
-        "touching-holes5",
-        "touching-holes6",
-        "touching2",
-        "touching3",
-        "touching4",
-        "water",
-        "water-huge",
-        "water-huge2",
-        "water2",
-        "water3",
-        "water3b",
-        "water4",
-    ])
-}
-
 #[test]
 fn integer_fixture_list_matches_fixture_dir() {
     let mut discovered = BTreeSet::new();
@@ -179,6 +131,64 @@ fn integer_fixture_list_matches_fixture_dir() {
     );
 }
 
+macro_rules! for_each_int_fixture {
+    ($macro:ident) => {
+        $macro! {
+            int_fixture_bad_diagonals => "bad-diagonals",
+            int_fixture_bad_hole => "bad-hole",
+            int_fixture_boxy => "boxy",
+            int_fixture_building => "building",
+            int_fixture_collinear_diagonal => "collinear-diagonal",
+            int_fixture_degenerate => "degenerate",
+            int_fixture_eberly_3 => "eberly-3",
+            int_fixture_empty_square => "empty-square",
+            int_fixture_filtered_bridge_jhl => "filtered-bridge-jhl",
+            int_fixture_hilbert => "hilbert",
+            int_fixture_hole_touching_outer => "hole-touching-outer",
+            int_fixture_hourglass => "hourglass",
+            int_fixture_issue111 => "issue111",
+            int_fixture_issue119 => "issue119",
+            int_fixture_issue131 => "issue131",
+            int_fixture_issue149 => "issue149",
+            int_fixture_issue186 => "issue186",
+            int_fixture_issue34 => "issue34",
+            int_fixture_issue35 => "issue35",
+            int_fixture_issue45 => "issue45",
+            int_fixture_issue52 => "issue52",
+            int_fixture_issue83 => "issue83",
+            int_fixture_outside_ring => "outside-ring",
+            int_fixture_rain => "rain",
+            int_fixture_shared_points => "shared-points",
+            int_fixture_simplified_us_border => "simplified-us-border",
+            int_fixture_steiner => "steiner",
+            int_fixture_touching_holes => "touching-holes",
+            int_fixture_touching_holes2 => "touching-holes2",
+            int_fixture_touching_holes3 => "touching-holes3",
+            int_fixture_touching_holes4 => "touching-holes4",
+            int_fixture_touching_holes5 => "touching-holes5",
+            int_fixture_touching_holes6 => "touching-holes6",
+            int_fixture_touching2 => "touching2",
+            int_fixture_touching3 => "touching3",
+            int_fixture_touching4 => "touching4",
+            int_fixture_water => "water",
+            int_fixture_water_huge => "water-huge",
+            int_fixture_water_huge2 => "water-huge2",
+            int_fixture_water2 => "water2",
+            int_fixture_water3 => "water3",
+            int_fixture_water3b => "water3b",
+            int_fixture_water4 => "water4",
+        }
+    };
+}
+
+macro_rules! define_listed_fixtures {
+    ($($fn_name:ident => $fixture:literal),* $(,)?) => {
+        fn listed_fixtures() -> BTreeSet<&'static str> {
+            BTreeSet::from([$($fixture),*])
+        }
+    };
+}
+
 macro_rules! int_fixture_tests {
     ($($fn_name:ident => $fixture:literal),* $(,)?) => {
         $(
@@ -188,48 +198,5 @@ macro_rules! int_fixture_tests {
     };
 }
 
-int_fixture_tests! {
-    int_fixture_bad_diagonals => "bad-diagonals",
-    int_fixture_bad_hole => "bad-hole",
-    int_fixture_boxy => "boxy",
-    int_fixture_building => "building",
-    int_fixture_collinear_diagonal => "collinear-diagonal",
-    int_fixture_degenerate => "degenerate",
-    int_fixture_eberly_3 => "eberly-3",
-    int_fixture_empty_square => "empty-square",
-    int_fixture_filtered_bridge_jhl => "filtered-bridge-jhl",
-    int_fixture_hilbert => "hilbert",
-    int_fixture_hole_touching_outer => "hole-touching-outer",
-    int_fixture_hourglass => "hourglass",
-    int_fixture_issue111 => "issue111",
-    int_fixture_issue119 => "issue119",
-    int_fixture_issue131 => "issue131",
-    int_fixture_issue149 => "issue149",
-    int_fixture_issue186 => "issue186",
-    int_fixture_issue34 => "issue34",
-    int_fixture_issue35 => "issue35",
-    int_fixture_issue45 => "issue45",
-    int_fixture_issue52 => "issue52",
-    int_fixture_issue83 => "issue83",
-    int_fixture_outside_ring => "outside-ring",
-    int_fixture_rain => "rain",
-    int_fixture_shared_points => "shared-points",
-    int_fixture_simplified_us_border => "simplified-us-border",
-    int_fixture_steiner => "steiner",
-    int_fixture_touching_holes => "touching-holes",
-    int_fixture_touching_holes2 => "touching-holes2",
-    int_fixture_touching_holes3 => "touching-holes3",
-    int_fixture_touching_holes4 => "touching-holes4",
-    int_fixture_touching_holes5 => "touching-holes5",
-    int_fixture_touching_holes6 => "touching-holes6",
-    int_fixture_touching2 => "touching2",
-    int_fixture_touching3 => "touching3",
-    int_fixture_touching4 => "touching4",
-    int_fixture_water => "water",
-    int_fixture_water_huge => "water-huge",
-    int_fixture_water_huge2 => "water-huge2",
-    int_fixture_water2 => "water2",
-    int_fixture_water3 => "water3",
-    int_fixture_water3b => "water3b",
-    int_fixture_water4 => "water4",
-}
+for_each_int_fixture!(define_listed_fixtures);
+for_each_int_fixture!(int_fixture_tests);
