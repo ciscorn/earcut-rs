@@ -1,7 +1,7 @@
 # earcut-rs
 
-[![CI](https://github.com/ciscorn/earcut-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/ciscorn/earcut-rs/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/ciscorn/earcut-rs/graph/badge.svg?token=thKlQiVjLc)](https://codecov.io/gh/ciscorn/earcut-rs)
+[![CI](https://github.com/georust/earcut/actions/workflows/ci.yml/badge.svg)](https://github.com/georust/earcut/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/georust/earcut/graph/badge.svg?token=thKlQiVjLc)](https://codecov.io/gh/georust/earcut)
 [![Crates.io Version](https://img.shields.io/crates/v/earcut)](https://crates.io/crates/earcut)
 
 A Rust port of the [mapbox/earcut](https://github.com/mapbox/earcut) polygon triangulation library.
@@ -10,7 +10,6 @@ A Rust port of the [mapbox/earcut](https://github.com/mapbox/earcut) polygon tri
 - Designed to avoid unnecessary memory allocations. Internal buffers and the output index vector can be reused across multiple triangulations.
 - Also provides `earcut::int::EarcutI32` for integer coordinates with exact integer predicates, but it can be slower than the float-based `Earcut` on modern CPUs.
 - An additional module, `utils3d`, can project 3D coplanar polygons onto a 2D plane before triangulation.
-- License: ISC
 
 <p align="center">
 <img src="./docs/image.png" width="300">
@@ -37,3 +36,9 @@ Measured on a MacBook Pro (M1 Pro).
 | water_huge2  |  15.86 ms/i |        16.26 ms/i |      22.35 ms/i |
 
 Note: earcut.hpp and earcutr have not fully caught up with the latest mapbox/earcut.
+
+## License
+
+Licensed under either the MIT License ([LICENSE-MIT](LICENSE-MIT)) or the Apache License 2.0 ([LICENSE-APACHE](LICENSE-APACHE)) at your option.
+
+This project contains portions derived from [mapbox/earcut](https://github.com/mapbox/earcut), originally distributed under the ISC License ([LICENSE-ISC](LICENSE-ISC)).
