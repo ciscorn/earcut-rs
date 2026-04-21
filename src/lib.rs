@@ -9,7 +9,7 @@ pub mod utils3d;
 use alloc::vec::Vec;
 use core::{cmp::Ordering, num::NonZeroU32, ptr};
 
-use num_traits::{AsPrimitive, float::Float};
+use num_traits::float::Float;
 
 /// Index of a vertex
 pub trait Index: Copy {
@@ -150,19 +150,19 @@ impl<T: Float> Node<T> {
 }
 
 /// Instance of the earcut algorithm.
-pub struct Earcut<T: Float + AsPrimitive<u32>> {
+pub struct Earcut<T: Float> {
     data: Vec<[T; 2]>,
     nodes: Vec<Node<T>>,
     queue: Vec<(NodeOffset, T)>,
 }
 
-impl<T: Float + AsPrimitive<u32>> Default for Earcut<T> {
+impl<T: Float> Default for Earcut<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Float + AsPrimitive<u32>> Earcut<T> {
+impl<T: Float> Earcut<T> {
     /// Creates a new instance of the earcut algorithm.
     ///
     /// You can reuse a single instance for multiple triangulations to reduce memory allocations.
@@ -350,7 +350,7 @@ enum Pass {
 
 /// main ear slicing loop which triangulates a polygon (given as a linked list)
 #[allow(clippy::too_many_arguments)]
-fn earcut_linked<T: Float + AsPrimitive<u32>, N: Index>(
+fn earcut_linked<T: Float, N: Index>(
     nodes: &mut Vec<Node<T>>,
     ear_i: NodeOffset,
     triangles: &mut Vec<N>,
@@ -460,7 +460,7 @@ fn is_ear<'a, T: Float>(
     (true, a, c)
 }
 
-fn is_ear_hashed<'a, T: Float + AsPrimitive<u32>>(
+fn is_ear_hashed<'a, T: Float>(
     nodes: &'a [Node<T>],
     ear: &'a Node<T>,
     min_x: T,
@@ -574,7 +574,7 @@ fn cure_local_intersections<T: Float, N: Index>(
 }
 
 /// try splitting polygon into two and triangulate them independently
-fn split_earcut<T: Float + AsPrimitive<u32>, N: Index>(
+fn split_earcut<T: Float, N: Index>(
     nodes: &mut Vec<Node<T>>,
     start_i: NodeOffset,
     triangles: &mut Vec<N>,
@@ -619,7 +619,7 @@ fn split_earcut<T: Float + AsPrimitive<u32>, N: Index>(
 }
 
 /// interlink polygon nodes in z-order
-fn index_curve<T: Float + AsPrimitive<u32>>(
+fn index_curve<T: Float>(
     nodes: &mut [Node<T>],
     start_i: NodeOffset,
     min_x: T,
@@ -1141,10 +1141,10 @@ fn signed_area<T: Float>(data: &[[T; 2]], start: usize, end: usize) -> T {
 }
 
 /// z-order of a point given coords and inverse of the longer side of data bbox
-fn z_order<T: Float + AsPrimitive<u32>>(xy: [T; 2], min_x: T, min_y: T, inv_size: T) -> i32 {
+fn z_order<T: Float>(xy: [T; 2], min_x: T, min_y: T, inv_size: T) -> i32 {
     // coords are transformed into non-negative 15-bit integer range
-    let x: u32 = ((xy[0] - min_x) * inv_size).as_();
-    let y: u32 = ((xy[1] - min_y) * inv_size).as_();
+    let x = ((xy[0] - min_x) * inv_size).to_u32().unwrap();
+    let y = ((xy[1] - min_y) * inv_size).to_u32().unwrap();
     let mut xy = (x as i64) << 32 | y as i64;
     xy = (xy | (xy << 8)) & 0x00FF00FF00FF00FF;
     xy = (xy | (xy << 4)) & 0x0F0F0F0F0F0F0F0F;
