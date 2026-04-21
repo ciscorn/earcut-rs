@@ -1,4 +1,4 @@
-name: Test
+name: CI
 
 on:
   push:
@@ -8,14 +8,14 @@ on:
       - "*"
   pull_request:
 
-env: 
-  CARGO_TERM_COLOR: always    
+env:
+  CARGO_TERM_COLOR: always
 
 permissions:
   contents: read
 
 jobs:
-  build_and_test:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,3 +37,28 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
           fail_ci_if_error: true
+
+  release:
+    name: Release-plz release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run release-plz
+        uses: release-plz/action@d5a2b630feb35385893823d8e2b82aa955218b74
+        with:
+          command: release
