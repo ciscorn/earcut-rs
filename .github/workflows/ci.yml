@@ -62,3 +62,5 @@ jobs:
         uses: release-plz/action@d5a2b630feb35385893823d8e2b82aa955218b74
         with:
           command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
