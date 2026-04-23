@@ -9,7 +9,7 @@ repository = "https://github.com/georust/earcut"
 categories = ["graphics", "science", "no-std"]
 include = [
     "/src/**/*.rs",
-    "/LICENSE.txt",
+    "/LICENSE-*",
     "README.md",
     "Cargo.toml",
 ]

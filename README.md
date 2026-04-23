@@ -1,7 +1,7 @@
 # earcut-rs
 
 [![CI](https://github.com/georust/earcut/actions/workflows/ci.yml/badge.svg)](https://github.com/georust/earcut/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/georust/earcut/graph/badge.svg?token=thKlQiVjLc)](https://codecov.io/gh/georust/earcut)
+[![codecov](https://codecov.io/gh/georust/earcut/graph/badge.svg)](https://codecov.io/gh/georust/earcut)
 [![Crates.io Version](https://img.shields.io/crates/v/earcut)](https://crates.io/crates/earcut)
 
 A Rust port of the [mapbox/earcut](https://github.com/mapbox/earcut) polygon triangulation library.
