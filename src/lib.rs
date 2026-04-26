@@ -68,7 +68,8 @@ type NodeOffset = NonZeroU32;
 ///
 /// In this crate, this holds because:
 ///
-/// - each offset is created with `node_offset::<N>` from an index into the same nodes Vec.
+/// - each offset is created with `node_offset::<N>` and is only used after its
+///   node has been appended.
 /// - nodes are only appended to the Vec and are never removed or reordered, so
 ///   each offset keeps identifying the same node.
 /// - offsets are byte offsets, not raw pointers. Each access adds the offset to
@@ -93,6 +94,7 @@ unsafe fn node_at<N>(nodes: &[N], offset: NodeOffset) -> &N {
 unsafe fn node_at_mut<N>(nodes: &mut [N], offset: NodeOffset) -> &mut N {
     let off = offset.get() as usize;
     let stride = core::mem::size_of::<N>();
+    debug_assert!(stride > 0);
     debug_assert!(off.is_multiple_of(stride));
     debug_assert!(off / stride < nodes.len());
     unsafe { &mut *nodes.as_mut_ptr().byte_add(off) }
@@ -100,10 +102,12 @@ unsafe fn node_at_mut<N>(nodes: &mut [N], offset: NodeOffset) -> &mut N {
 
 #[inline(always)]
 fn node_offset<N>(index: usize) -> NodeOffset {
+    // Index 0 is the dummy node. Real node offsets are non-zero.
+    debug_assert!(index > 0);
     let stride = core::mem::size_of::<N>();
     assert!(index <= u32::MAX as usize / stride);
     let byte_offset = (index * stride) as u32;
-    NodeOffset::new(byte_offset).expect("node byte offset must be non-zero")
+    unsafe { NodeOffset::new_unchecked(byte_offset) }
 }
 
 const STEINER_BIT: u32 = 1 << 31;
