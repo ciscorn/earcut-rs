@@ -103,11 +103,10 @@ unsafe fn node_at_mut<N>(nodes: &mut [N], offset: NodeOffset) -> &mut N {
 #[inline(always)]
 fn node_offset<N>(index: usize) -> NodeOffset {
     // Index 0 is the dummy node. Real node offsets are non-zero.
-    debug_assert!(index > 0);
     let stride = core::mem::size_of::<N>();
-    assert!(index <= u32::MAX as usize / stride);
+    assert!(index > 0 && index <= u32::MAX as usize / stride);
     let byte_offset = (index * stride) as u32;
-    unsafe { NodeOffset::new_unchecked(byte_offset) }
+    NodeOffset::new(byte_offset).unwrap()
 }
 
 const STEINER_BIT: u32 = 1 << 31;
