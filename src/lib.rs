@@ -67,7 +67,9 @@ impl Index for usize {
     }
 }
 
-/// Byte offset (from `nodes` base pointer) of a node in the nodes Vec.
+/// Byte offset of a node in the nodes Vec.
+///
+/// Non-zero so `Option<NodeOffset>` keeps `Node` small.
 type NodeOffset = NonZeroU32;
 
 /// # Safety
@@ -91,8 +93,8 @@ unsafe fn node_at<N>(nodes: &[N], offset: NodeOffset) -> &N {
     debug_assert!(stride > 0);
     debug_assert!(off.is_multiple_of(stride));
     debug_assert!(off / stride < nodes.len());
-    // SAFETY: the caller guarantees that `offset` points to a valid element in
-    // `nodes`; see the safety contract above.
+    // SAFETY: the caller guarantees that `offset` is valid for `nodes`;
+    // see the safety contract above.
     unsafe { &*nodes.as_ptr().byte_add(off) }
 }
 
@@ -107,14 +109,16 @@ unsafe fn node_at_mut<N>(nodes: &mut [N], offset: NodeOffset) -> &mut N {
     debug_assert!(stride > 0);
     debug_assert!(off.is_multiple_of(stride));
     debug_assert!(off / stride < nodes.len());
-    // SAFETY: the caller guarantees that `offset` points to a valid element in
-    // `nodes`; see the safety contract above.
+    // SAFETY: the caller guarantees that `offset` is valid for `nodes`;
+    // see the safety contract above.
     unsafe { &mut *nodes.as_mut_ptr().byte_add(off) }
 }
 
+/// Creates a byte offset for a real node.
+///
+/// Index 0 is the dummy node, so real node offsets are non-zero.
 #[inline(always)]
 fn node_offset<N>(index: usize) -> NodeOffset {
-    // Index 0 is the dummy node. Real node offsets are non-zero.
     let stride = core::mem::size_of::<N>();
     assert!(index > 0 && index <= u32::MAX as usize / stride);
     let byte_offset = (index * stride) as u32;
