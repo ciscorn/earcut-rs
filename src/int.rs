@@ -129,6 +129,7 @@ pub fn deviation<N: Index>(
 
 /// signed area of a polygon ring (twice the geometric area)
 fn signed_area(data: &[[i32; 2]], start: usize, end: usize) -> i64 {
+    assert!(end > 0 && start <= end && end <= data.len());
     let [mut bx, mut by] = [data[end - 1][0] as i64, data[end - 1][1] as i64];
     let mut sum = 0;
     for &[ax_r, ay_r] in &data[start..end] {
@@ -1060,6 +1061,7 @@ fn remove_node(nodes: &mut [Node], pl: LinkInfo) -> (NodeOffset, NodeOffset) {
 
 #[inline]
 fn input_bbox(data: &[[i32; 2]], start: usize, end: usize) -> InputBbox {
+    assert!(start < end && end <= data.len());
     let mut bbox = InputBbox::new(data[start]);
     for &xy in &data[start..end] {
         bbox.update(xy);
@@ -1216,6 +1218,7 @@ impl EarcutI32 {
     }
 
     fn linked_list(&mut self, start: usize, end: usize, clockwise: bool) -> Option<NodeOffset> {
+        assert!(start <= end && end <= self.data.len());
         let mut last_i = None;
         let iter = self.data[start..end].iter().enumerate();
         if clockwise == (signed_area(&self.data, start, end) > 0) {

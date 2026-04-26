@@ -287,6 +287,7 @@ impl<T: Float> Earcut<T> {
 
     /// create a circular doubly linked list from polygon points in the specified winding order
     fn linked_list(&mut self, start: usize, end: usize, clockwise: bool) -> Option<NodeOffset> {
+        assert!(start <= end && end <= self.data.len());
         let mut last_i: Option<NodeOffset> = None;
         let iter = self.data[start..end].iter().enumerate();
 
@@ -1158,6 +1159,7 @@ pub fn deviation<T: Float, N: Index>(
 
 /// check if a point lies within a convex triangle
 fn signed_area<T: Float>(data: &[[T; 2]], start: usize, end: usize) -> T {
+    assert!(end > 0 && start <= end && end <= data.len());
     let [mut bx, mut by] = data[end - 1];
     let mut sum = T::zero();
     for &[ax, ay] in &data[start..end] {
