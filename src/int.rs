@@ -4,7 +4,9 @@
 //! floating-point rounding errors of [`crate::Earcut`].
 
 use alloc::vec::Vec;
-use core::{num::NonZeroU32, ptr};
+use core::{cmp::Ordering, num::NonZeroU32, ptr};
+
+use crate::node_offset;
 
 #[inline(always)]
 fn use_small_path(range_x: i64, range_y: i64) -> bool {
@@ -141,44 +143,6 @@ fn signed_area(data: &[[i32; 2]], start: usize, end: usize) -> i64 {
 /// Sentinel `shift` value signaling "no z-order hashing" for this run.
 const NO_HASH: u32 = u32::MAX;
 
-macro_rules! node {
-    ($self:ident.$nodes:ident, $offset:expr) => {
-        unsafe {
-            let off = $offset.get() as usize;
-            debug_assert!(off % core::mem::size_of_val(&$self.$nodes[0]) == 0);
-            debug_assert!(off / core::mem::size_of_val(&$self.$nodes[0]) < $self.$nodes.len());
-            &*$self.$nodes.as_ptr().byte_add(off)
-        }
-    };
-    ($nodes:ident, $offset:expr) => {
-        unsafe {
-            let off = $offset.get() as usize;
-            debug_assert!(off % core::mem::size_of_val(&$nodes[0]) == 0);
-            debug_assert!(off / core::mem::size_of_val(&$nodes[0]) < $nodes.len());
-            &*$nodes.as_ptr().byte_add(off)
-        }
-    };
-}
-
-macro_rules! node_mut {
-    ($self:ident.$nodes:ident, $offset:expr) => {
-        unsafe {
-            let off = $offset.get() as usize;
-            debug_assert!(off % core::mem::size_of_val(&$self.$nodes[0]) == 0);
-            debug_assert!(off / core::mem::size_of_val(&$self.$nodes[0]) < $self.$nodes.len());
-            &mut *$self.$nodes.as_mut_ptr().byte_add(off)
-        }
-    };
-    ($nodes:ident, $offset:expr) => {
-        unsafe {
-            let off = $offset.get() as usize;
-            debug_assert!(off % core::mem::size_of_val(&$nodes[0]) == 0);
-            debug_assert!(off / core::mem::size_of_val(&$nodes[0]) < $nodes.len());
-            &mut *$nodes.as_mut_ptr().byte_add(off)
-        }
-    };
-}
-
 /// Byte offset (from `nodes` base pointer) of a `Node` in the `nodes` Vec.
 type NodeOffset = NonZeroU32;
 
@@ -238,14 +202,16 @@ impl InputBbox {
 }
 
 impl Node {
+    const PLACEHOLDER_OFFSET: NodeOffset =
+        NodeOffset::new(core::mem::size_of::<Self>() as u32).unwrap();
+
     fn new(i: u32, xy: [i32; 2]) -> Self {
         debug_assert!(i & STEINER_BIT == 0);
-        let placeholder = unsafe { NodeOffset::new_unchecked(core::mem::size_of::<Self>() as u32) };
         Self {
             i_steiner: i,
             xy,
-            prev_i: placeholder,
-            next_i: placeholder,
+            prev_i: Self::PLACEHOLDER_OFFSET,
+            next_i: Self::PLACEHOLDER_OFFSET,
             z: 0,
             prev_z_i: None,
             next_z_i: None,
@@ -1018,9 +984,8 @@ fn filter_points(nodes: &mut [Node], start_i: NodeOffset, end_i: Option<NodeOffs
 /// if one belongs to the outer ring and another to a hole, it merges it into a single ring
 fn split_polygon(nodes: &mut Vec<Node>, a_i: NodeOffset, b_i: NodeOffset) -> NodeOffset {
     debug_assert!(!nodes.is_empty());
-    let stride = core::mem::size_of::<Node>() as u32;
-    let a2_i = unsafe { NodeOffset::new_unchecked(nodes.len() as u32 * stride) };
-    let b2_i = unsafe { NodeOffset::new_unchecked((nodes.len() as u32 + 1) * stride) };
+    let a2_i = node_offset::<Node>(nodes.len());
+    let b2_i = node_offset::<Node>(nodes.len() + 1);
 
     let a = node_mut!(nodes, a_i);
     let mut a2 = Node::new(a.index(), a.xy);
@@ -1052,8 +1017,7 @@ fn insert_node(
     last: Option<NodeOffset>,
 ) -> NodeOffset {
     let mut p = Node::new(i, xy);
-    let stride = core::mem::size_of::<Node>() as u32;
-    let p_i = unsafe { NodeOffset::new_unchecked(nodes.len() as u32 * stride) };
+    let p_i = node_offset::<Node>(nodes.len());
     match last {
         Some(last_i) => {
             let last = node_mut!(nodes, last_i);
@@ -1151,8 +1115,6 @@ fn on_segment(p: &Node, q: &Node, r: &Node) -> bool {
     ((q.xy[0] <= p.xy[0].max(r.xy[0])) & (q.xy[1] <= p.xy[1].max(r.xy[1])))
         && ((q.xy[0] >= p.xy[0].min(r.xy[0])) & (q.xy[1] >= p.xy[1].min(r.xy[1])))
 }
-
-use core::cmp::Ordering;
 
 /// Integer earcut specialized for `i32` coordinates.
 pub struct EarcutI32 {
@@ -1304,8 +1266,8 @@ impl EarcutI32 {
                 Ordering::Equal => {}
                 ordering => return ordering,
             }
-            let a = node!(self.nodes, ai);
-            let b = node!(self.nodes, bi);
+            let a = node!(self.nodes, *ai);
+            let b = node!(self.nodes, *bi);
             match a.xy[1].cmp(&b.xy[1]) {
                 Ordering::Equal => {}
                 ordering => return ordering,
