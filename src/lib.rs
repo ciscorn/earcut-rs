@@ -10,18 +10,26 @@ use num_traits::float::Float;
 
 macro_rules! node {
     ($self:ident.$nodes:ident, $offset:expr) => {
+        // SAFETY: all `NodeOffset`s used by this crate follow the invariant
+        // documented on `node_at`.
         unsafe { $crate::node_at(&$self.$nodes, $offset) }
     };
     ($nodes:ident, $offset:expr) => {
+        // SAFETY: all `NodeOffset`s used by this crate follow the invariant
+        // documented on `node_at`.
         unsafe { $crate::node_at($nodes, $offset) }
     };
 }
 
 macro_rules! node_mut {
     ($self:ident.$nodes:ident, $offset:expr) => {
+        // SAFETY: all `NodeOffset`s used by this crate follow the invariant
+        // documented on `node_at_mut`.
         unsafe { $crate::node_at_mut(&mut $self.$nodes, $offset) }
     };
     ($nodes:ident, $offset:expr) => {
+        // SAFETY: all `NodeOffset`s used by this crate follow the invariant
+        // documented on `node_at_mut`.
         unsafe { $crate::node_at_mut($nodes, $offset) }
     };
 }
@@ -83,6 +91,8 @@ unsafe fn node_at<N>(nodes: &[N], offset: NodeOffset) -> &N {
     debug_assert!(stride > 0);
     debug_assert!(off.is_multiple_of(stride));
     debug_assert!(off / stride < nodes.len());
+    // SAFETY: the caller guarantees that `offset` points to a valid element in
+    // `nodes`; see the safety contract above.
     unsafe { &*nodes.as_ptr().byte_add(off) }
 }
 
@@ -97,6 +107,8 @@ unsafe fn node_at_mut<N>(nodes: &mut [N], offset: NodeOffset) -> &mut N {
     debug_assert!(stride > 0);
     debug_assert!(off.is_multiple_of(stride));
     debug_assert!(off / stride < nodes.len());
+    // SAFETY: the caller guarantees that `offset` points to a valid element in
+    // `nodes`; see the safety contract above.
     unsafe { &mut *nodes.as_mut_ptr().byte_add(off) }
 }
 
