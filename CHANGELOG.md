@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.11](https://github.com/georust/earcut/compare/v0.4.10...v0.4.11) - 2026-07-25
+
+### Added
+
+- sync with upstream earcut 3.2.3 ([#46](https://github.com/georust/earcut/pull/46))
+
 ## [0.4.10](https://github.com/georust/earcut/compare/v0.4.9...v0.4.10) - 2026-05-04
 
 ### Added
